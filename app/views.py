@@ -11,6 +11,7 @@ from app.models import Movie
 from app.forms import MovieForm
 from werkzeug.utils import secure_filename
 from flask import render_template, request, jsonify, send_file, flash
+from flask_wtf.csrf import generate_csrf
 
 ###
 # Routing for your application.
@@ -32,22 +33,28 @@ def movies():
         # Secure and save the poster file
         poster_filename = secure_filename(poster.filename)
         poster_filepath = os.path.join(app.config['UPLOAD_FOLDER'], poster_filename)
-        poster.save(poster_filepath)
         
         # Create the Movie object
-        movie = Movie(title=title, description=description, poster=poster_filename)
+        movie = Movie(title, description, poster_filename)
         
         # Add and commit the new movie to the database
         db.session.add(movie)
         db.session.commit()
-        
-        # Remember to flash a message to the user
-        # flash("You have successfully added a movie.", "success")
 
-        message = "Movie Successfully added"
+        poster.save(poster_filepath)
+
+        message = "File Upload Successfully"
             
-        return jsonify(movie.to_dict(message))
+        return jsonify({"message": message,
+                        "title": title,
+                        "poster": poster_filename,
+                        "description": description})
+    
     return form_errors(form)
+
+@app.route('/api/v1/csrf-token', methods=['GET'])
+def get_csrf(): 
+    return jsonify({'csrf_token': generate_csrf()}) 
 
 ###
 # The functions below should be applicable to all Flask apps.
