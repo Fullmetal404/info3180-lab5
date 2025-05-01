@@ -10,7 +10,7 @@ from app import app, db
 from app.models import Movie
 from app.forms import MovieForm
 from werkzeug.utils import secure_filename
-from flask import render_template, request, jsonify, send_file, flash
+from flask import render_template, jsonify, send_from_directory
 from flask_wtf.csrf import generate_csrf
 
 ###
@@ -54,7 +54,26 @@ def movies():
 
 @app.route('/api/v1/csrf-token', methods=['GET'])
 def get_csrf(): 
-    return jsonify({'csrf_token': generate_csrf()}) 
+    return jsonify({'csrf_token': generate_csrf()})
+
+@app.route('/api/v1/movies', methods=['GET'])
+def add_movies():
+    movies = db.session.execute(db.select(Movie)).scalars().all()
+    movies_list = [
+        {
+            "id": movie.id,
+            "title": movie.title,
+            "description": movie.description,
+            "poster": f"/api/v1/posters/{movie.poster}"
+        }
+        for movie in movies
+    ]
+    return jsonify({"movies": movies_list})
+
+@app.route('/api/v1/posters/<filename>')
+def get_image(filename):
+    upload_folder = os.path.join(os.getcwd(), app.config["UPLOAD_FOLDER"])
+    return send_from_directory(upload_folder, filename)
 
 ###
 # The functions below should be applicable to all Flask apps.

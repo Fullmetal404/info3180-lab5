@@ -10,7 +10,9 @@ class Movie(db.Model):
     title = db.Column(db.String(80), nullable=False)
     description = db.Column(db.Text, unique=True, nullable=False)
     poster = db.Column(db.String(80), nullable=False)
-    created_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False,
+        default=lambda: datetime.now(timezone.utc)
+    )
 
     def __init__(self, title, description, poster):
         self.title = title
